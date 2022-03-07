@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
 import os
-
+from datetime import datetime
+from math import dist
 
 cam = cv2.VideoCapture("http://192.168.178.40:8080/?action=stream")
 
@@ -12,7 +13,10 @@ bg_buffer = []
 recalc_bg = 50
 background = None
 gray_sub = None
+last_time = 0
+tracepoints = []
 
+MAX_SPEED = 150
 def get_background(frames):
    # list_of_grayscale_images = []
    # for f in frames:
@@ -26,6 +30,7 @@ def get_background(frames):
 while True:
     check, frame = cam.read()
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    """
     bg_buffer.append(gray)
     if len(bg_buffer) > recalc_bg:
         bg_buffer.pop(0)
@@ -50,8 +55,8 @@ while True:
 
     # Filter by Area.
     params.filterByArea = True
-    params.minArea = 0.05
-    params.maxArea = 200
+    params.minArea = 1
+    params.maxArea = 150
 
     # Filter by Circularity
     params.filterByCircularity = True
@@ -77,30 +82,44 @@ while True:
     # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures
     # the size of the circle corresponds to the size of blob
 
-    frame = cv2.drawKeypoints(frame, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    #frame = cv2.drawKeypoints(frame, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+    if len(keypoints) > 1:
+        current_time = datetime.now()
+        if len(tracepoints) > 1:
+            elapsed = current_time - last_time
+            p1 = (int(tracepoints[-1].pt[0]), int(tracepoints[-1].pt[1]))
+            p2 = (int(tracepoints[-2].pt[0]), int(tracepoints[-2].pt[1]))
+
+            distance = dist(p1, p2)
+            if(distance / elapsed.total_seconds() >= MAX_SPEED):
+                print("too fast")
+
+            if(len(tracepoints) > recalc_bg):
+                tracepoints.pop(0)
+            tracepoints.append(keypoints[0])
+        else:
+            last_time = current_time
+            tracepoints.append(keypoints[0])
+
+    #frame = cv2.drawKeypoints(frame, tracepoints, frame)
+"""
 
 
-    """
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    gray = cv2.GaussianBlur(gray, (15,15), 0)
-    
+    blur = cv2.GaussianBlur(gray, (15,15), 0)
+    (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(blur)
+    image = frame.copy()
+    cv2.circle(image, maxLoc,5, (255, 0, 0), 2)
+    tracepoints.append(maxLoc)
+    if(len(tracepoints) > recalc_bg):
+        tracepoints.pop(0)
+    if len(tracepoints) > 1:
+        #cv2.polylines(image, np.array(tracepoints), False, (0,255,0))
+        for t in tracepoints:
+                cv2.circle(image, t,5, (255, 0, 0), 2)
 
-    
-    (T, gray) = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
-    contours,hierarchy = cv2.findContours(gray,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-    filteredContours = []
-    for c in contours:
-        if cv2.contourArea(c) > 50 and cv2.contourArea(c) < 200:
-            filteredContours.append(c)
-            print("Contour Found")
-    gray = cv2.drawContours(gray, filteredContours, -1, (0, 255, 0), 3)    
-    (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(gray)
-
-    cv2.circle(gray, maxLoc, 41, (255, 0, 0), 2)    
-
-
-    """
-    cv2.imshow('video', frame)
+   
+    cv2.imshow('video', image)
 
     key = cv2.waitKey(1)
     if key == 27:
