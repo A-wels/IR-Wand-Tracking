@@ -10,7 +10,8 @@ cam = cv2.VideoCapture("http://192.168.178.40:8080/?action=stream")
 BACKGROUND_PATH = "./results/background_images"
 
 bg_buffer = []
-recalc_bg = 50
+recalc_bg = 150
+trace_len = 20
 background = None
 gray_sub = None
 last_time = 0
@@ -30,7 +31,7 @@ def get_background(frames):
 while True:
     check, frame = cam.read()
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    """
+    
     bg_buffer.append(gray)
     if len(bg_buffer) > recalc_bg:
         bg_buffer.pop(0)
@@ -41,7 +42,7 @@ while True:
     else:
         gray_sub = gray
 
-
+    """
     # Setup SimpleBlobDetector parameters.
     params = cv2.SimpleBlobDetector_Params()
 
@@ -105,13 +106,13 @@ while True:
     #frame = cv2.drawKeypoints(frame, tracepoints, frame)
 """
 
-
-    blur = cv2.GaussianBlur(gray, (15,15), 0)
+    ret,thresh = cv2.threshold(gray,205,255,cv2.THRESH_BINARY)
+    blur = cv2.GaussianBlur(thresh, (15,15), 0)
     (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(blur)
     image = frame.copy()
     cv2.circle(image, maxLoc,5, (255, 0, 0), 2)
     tracepoints.append(maxLoc)
-    if(len(tracepoints) > recalc_bg):
+    if(len(tracepoints) > trace_len):
         tracepoints.pop(0)
     if len(tracepoints) > 1:
         #cv2.polylines(image, np.array(tracepoints), False, (0,255,0))
@@ -120,8 +121,14 @@ while True:
 
    
     cv2.imshow('video', image)
-
+    cv2.imshow('blur', blur)
     key = cv2.waitKey(1)
+    canvas = np.zeros(frame.shape)
+    canvas.fill(255)
+    tracepoints_array = np.array(tracepoints, np.int32)
+    if(len(tracepoints) > 1):
+        canvas = cv2.polylines(canvas, [tracepoints_array], False, (0,0,0), 1)
+    cv2.imshow("white",canvas)
     if key == 27:
         break
 
