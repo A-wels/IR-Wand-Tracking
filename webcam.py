@@ -3,7 +3,7 @@ import numpy as np
 import os
 from datetime import datetime
 from math import dist
-
+import time
 cam = cv2.VideoCapture("http://192.168.178.40:8080/?action=stream")
 
 
@@ -16,8 +16,9 @@ background = None
 gray_sub = None
 last_time = 0
 tracepoints = []
-
-MAX_SPEED = 150
+interval_drop_tp = 4
+index_drop = 0
+MAX_SPEED = 20
 def get_background(frames):
    # list_of_grayscale_images = []
    # for f in frames:
@@ -32,22 +33,22 @@ while True:
     check, frame = cam.read()
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     
-    bg_buffer.append(gray)
-    if len(bg_buffer) > recalc_bg:
-        bg_buffer.pop(0)
-        background = get_background(bg_buffer)
-        cv2.imshow("bg", background)    
-    if background is not None:
-        gray_sub = gray-background
-    else:
-        gray_sub = gray
+  #  bg_buffer.append(gray)
+  #  if len(bg_buffer) > recalc_bg:
+  #      bg_buffer.pop(0)
+  #      background = get_background(bg_buffer)
+  #      cv2.imshow("bg", background)  
 
-    """
+  #  if background is not None:
+  #      gray_sub = gray-background
+  #  else:
+  #      gray_sub = gray
+
     # Setup SimpleBlobDetector parameters.
     params = cv2.SimpleBlobDetector_Params()
 
     # Change thresholds
-    params.minThreshold = 150
+    params.minThreshold = 210
     params.maxThreshold = 255
 
     params.filterByColor = True
@@ -56,16 +57,16 @@ while True:
 
     # Filter by Area.
     params.filterByArea = True
-    params.minArea = 1
-    params.maxArea = 150
+    params.minArea = 10
+    params.maxArea = 500
 
     # Filter by Circularity
     params.filterByCircularity = True
-    params.minCircularity = 0.4
+    params.minCircularity = 0.2
 
     # Filter by Convexity
     params.filterByConvexity = True
-    params.minConvexity = 0.4
+    params.minConvexity = 0.2
 
     # Filter by Inertia
     params.filterByInertia = False
@@ -75,9 +76,20 @@ while True:
     # OLD: detector = cv2.SimpleBlobDetector(params)
     detector = cv2.SimpleBlobDetector_create(params)
 
+    #frame = cv2.drawKeypoints(frame, tracepoints, frame)
+
+   # ret,thresh = cv2.threshold(gray,205,255,cv2.THRESH_BINARY)
+    thresh = gray
+    blur = cv2.GaussianBlur(thresh, (17,17), 0)
+   # (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(blur)
+    image = frame.copy()
+   # cv2.circle(image, maxLoc,5, (255, 0, 0), 2)
+   # tracepoints.append(maxLoc)
+
+
 
     # Detect blobs.
-    keypoints = detector.detect(gray_sub)
+    keypoints = detector.detect(blur)
 
     # Draw detected blobs as red circles.
     # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures
@@ -103,31 +115,32 @@ while True:
             last_time = current_time
             tracepoints.append(keypoints[0])
 
-    #frame = cv2.drawKeypoints(frame, tracepoints, frame)
-"""
 
-    ret,thresh = cv2.threshold(gray,205,255,cv2.THRESH_BINARY)
-    blur = cv2.GaussianBlur(thresh, (15,15), 0)
-    (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(blur)
-    image = frame.copy()
-    cv2.circle(image, maxLoc,5, (255, 0, 0), 2)
-    tracepoints.append(maxLoc)
-    if(len(tracepoints) > trace_len):
+    if(len(tracepoints) > 0 and index_drop > interval_drop_tp):
         tracepoints.pop(0)
+        index_drop = 0
+    else:
+        index_drop+=1
+
     if len(tracepoints) > 1:
         #cv2.polylines(image, np.array(tracepoints), False, (0,255,0))
         for t in tracepoints:
-                cv2.circle(image, t,5, (255, 0, 0), 2)
+                cv2.circle(image, (int(t.pt[0]), int(t.pt[1])),5, (255, 0, 0), 2)
 
    
+  #  cv2.imshow('blur', blur)
     cv2.imshow('video', image)
-    cv2.imshow('blur', blur)
+
     key = cv2.waitKey(1)
     canvas = np.zeros(frame.shape)
     canvas.fill(255)
-    tracepoints_array = np.array(tracepoints, np.int32)
+  #  tracepoints_array = np.array((tracepoints.pt[0], tracepoints.pt[1]), np.int32)
     if(len(tracepoints) > 1):
-        canvas = cv2.polylines(canvas, [tracepoints_array], False, (0,0,0), 1)
+        line_index = 0
+        for p in tracepoints[1:]:
+            canvas = cv2.line(canvas, (int(tracepoints[line_index].pt[0]),int(tracepoints[line_index].pt[1])), (int(p.pt[0]),int(p.pt[1])), (0,0,0))
+            line_index +=1
+           # canvas = cv2.polylines(canvas, [tracepoints_array], False, (0,0,0), 1)
     cv2.imshow("white",canvas)
     if key == 27:
         break
