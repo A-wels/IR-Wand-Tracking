@@ -7,12 +7,13 @@ import time
 from config import *
 from modules.actions import toggle_hexalight
 from util import recognize_gesture, show_trace, show_tracepoints
+from modules.motor import trigger_motor
 #cam = cv2.VideoCapture("http://192.168.178.40:8080/?action=stream")
 cam = cv2.VideoCapture(0)
 
 
 bg_buffer = []
-recalc_bg = 50
+recalc_bg = 10
 MAX_TRACEPOINTS = 10
 background = None
 gray_sub = None
@@ -25,6 +26,9 @@ TARGET_FPS = 10
 directions: List[Tuple] = []
 
 check, frame = cam.read()
+while not check:
+    print(check)
+    check,frame = cam.read()
 shape = frame.shape
 
 
@@ -70,6 +74,7 @@ while True:
     (_, maxVal, _, maxLoc) = cv2.minMaxLoc(gray)
 
     # Update the list of tracepoints
+    print(maxVal)
     if(maxVal > 130):
      tracepoints.append(maxLoc)
      if(len(tracepoints) > MAX_TRACEPOINTS):
@@ -95,6 +100,8 @@ while True:
     gesture =  recognize_gesture(tracepoints.copy())
 
     if gesture.name == "ONE":
+        toggle_hexalight()
+        trigger_motor()
         toggle_hexalight()
         tracepoints = []
         directions = []
