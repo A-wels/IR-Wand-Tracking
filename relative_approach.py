@@ -14,7 +14,6 @@ cam = cv2.VideoCapture(0)
 
 bg_buffer = []
 recalc_bg = 10
-MAX_TRACEPOINTS = 10
 background = None
 gray_sub = None
 last_time = None
@@ -76,7 +75,7 @@ while True:
     gray = cv2.GaussianBlur(gray, (3, 3), 0)
     (_, maxVal, _, maxLoc) = cv2.minMaxLoc(gray)
 
-    print("maxval: " + str(maxVal))
+    #print("maxval: " + str(maxVal))
     # check if the wand was held still
     if CURRENT_ITERATIONS > ITERATIONS_AFTER_START:
         distance_of_last_positions = calculate_distance_sum(last_four)
