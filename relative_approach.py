@@ -13,7 +13,7 @@ cam = cv2.VideoCapture(0)
 
 
 bg_buffer = []
-recalc_bg = 10
+recalc_bg = 2
 background = None
 gray_sub = None
 last_time = None
@@ -22,7 +22,6 @@ MAX_SPEED = 20
 shape = None
 TARGET_FPS = 10
 # keep four points: hold still at the beginning of the gesture
-last_four = []
 START_TIME = 0
 directions: List[Tuple] = []
 
@@ -74,34 +73,21 @@ while True:
     # blur the image and locate max
     gray = cv2.GaussianBlur(gray, (3, 3), 0)
     (_, maxVal, _, maxLoc) = cv2.minMaxLoc(gray)
-
     #print("maxval: " + str(maxVal))
     # check if the wand was held still
-    if CURRENT_ITERATIONS > ITERATIONS_AFTER_START:
-        distance_of_last_positions = calculate_distance_sum(last_four)
 
     # Update the list of tracepoints
-    if(maxVal > LAST_FOUR_THRESHOLD):
-        last_four.append(maxLoc)
 
+    print(maxVal)
     if(maxVal > MAXVAL_THRESHOLD):
-        if(distance_of_last_positions < START_DISTANCE_MOVEMENT):
-          if not hexalight_on:
-            toggle_hexalight()
-            hexalight_on = True
-            CURRENT_ITERATIONS = 0
-
-          tracepoints.append(maxLoc)
+        tracepoints.append(maxLoc)
         if(len(tracepoints) > MAX_TRACEPOINTS):
             tracepoints.pop(0)
-        if(len(last_four) > 4):
-            last_four.pop(0)
+
     else:
         if len(tracepoints) > 0:
             tracepoints.pop(0)
-        if len(last_four) > 0:
-            last_four.pop()
-    
+
         
 
     if VERBOSE_OUTPUT:
@@ -111,7 +97,7 @@ while True:
         
         cv2.imshow('video', frame)
 
-   # key = cv2.waitKey(1)
+    key = cv2.waitKey(1)
  
   #  tracepoints_array = np.array((tracepoints.pt[0], tracepoints.pt[1]), np.int32)
    
@@ -119,27 +105,25 @@ while True:
        show_trace(gray, tracepoints)
 
     # recognize a gesture if the wand was held still for a while
-    if CURRENT_ITERATIONS <= ITERATIONS_AFTER_START:
-        gesture =  recognize_gesture(tracepoints.copy())
+    gesture =  recognize_gesture(tracepoints.copy())
 
-        if gesture.name == "ONE":
-            trigger_motor()
-            toggle_hexalight()
-            hexalight_on = False
-            CURRENT_ITERATIONS = 998
-            tracepoints = []
-            directions = []
-        CURRENT_ITERATIONS += 1
+    if gesture.name == "ONE":
+        trigger_motor()
+        toggle_hexalight()
+        hexalight_on = False
+        CURRENT_ITERATIONS = 998
+        tracepoints = []
+        directions = []
+    CURRENT_ITERATIONS += 1
 
-    else:
-
-        if hexalight_on:
-            toggle_hexalight()
-            hexalight_on = False
+   # else:#
+       # if hexalight_on:
+       #     toggle_hexalight()
+       #     hexalight_on = False
 
 
-  #  if key == 27:
-  #      break
+    if key == 27:
+        break
 
 cam.release()
 cv2.destroyAllWindows() 

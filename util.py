@@ -54,6 +54,7 @@ def recognize_gesture(tracepoints: List[Tuple]) -> Gesture:
         last_distance = direction[1]
         tracepoints.pop(0)
         thetas = []
+        total_distance = 0
 
         directions = []
         if(last_distance > 4 and len(tracepoints) > 3) and last_distance < 60:
@@ -66,6 +67,7 @@ def recognize_gesture(tracepoints: List[Tuple]) -> Gesture:
                     last_distance = direction[1]
                     if(last_distance > 4):
                         distance_sum += direction[1]
+                        total_distance += direction[1]
                         last_theta = new_theta
                         new_theta = abs(direction[0])
                        # print(new_theta)
@@ -80,14 +82,16 @@ def recognize_gesture(tracepoints: List[Tuple]) -> Gesture:
                     new_theta = abs(direction[0])
                     new_direction = True
 
-                    # print("CHANGE IN DIRECTION: " + str(last_theta) + " to " + str(new_theta))
+                    #print("CHANGE IN DIRECTION: " + str(last_theta) + " to " + str(new_theta))
 
      #   print(directions)
 
         # match to gesture
         possible = True
+        print("Total distance: " + str(total_distance))
         for g in Gesture:
-            if(g.name != Gesture.NO_GESTURE_RECOGNIZED.name and len(g.value) == len(directions)):
+            if(g.name != Gesture.NO_GESTURE_RECOGNIZED.name and len(g.value) == len(directions) and total_distance >= 102):
+                print("Trying")
                 for index, d in enumerate(directions):
                     theta_diff = g.value[index][0] - d[0]
                     print("theta diff:  "+ str(theta_diff))
