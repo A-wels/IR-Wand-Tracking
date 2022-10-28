@@ -78,7 +78,7 @@ while True:
 
     # Update the list of tracepoints
 
-    print(maxVal)
+    #print(maxVal)
     if(maxVal > MAXVAL_THRESHOLD):
         tracepoints.append(maxLoc)
         if(len(tracepoints) > MAX_TRACEPOINTS):
@@ -108,6 +108,7 @@ while True:
     gesture =  recognize_gesture(tracepoints.copy())
 
     if gesture.name == "ONE":
+        toggle_hexalight()
         trigger_motor()
         toggle_hexalight()
         hexalight_on = False
