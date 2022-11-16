@@ -8,7 +8,7 @@ def trigger_motor():
     print("two")
     gpio.output(5,False)
     gpio.output(6,True)
-    time.sleep(1)
+    time.sleep(3)
     print("stop")
     gpio.output(5,False)
     gpio.output(6,False)

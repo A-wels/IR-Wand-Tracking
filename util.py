@@ -57,7 +57,7 @@ def recognize_gesture(tracepoints: List[Tuple]) -> Gesture:
         total_distance = 0
 
         directions = []
-        if(last_distance > 4 and len(tracepoints) > 3) and last_distance < 60:
+        if(last_distance > 4 and len(tracepoints) > 3) and last_distance < 70:
             while len(tracepoints) > 2:
                 new_direction = True
                 while(len(tracepoints) > 2 and new_theta >= last_theta - THETA_ALLOWED_VARIANCE and new_theta <= last_theta + THETA_ALLOWED_VARIANCE or new_direction):

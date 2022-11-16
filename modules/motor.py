@@ -1,3 +1,4 @@
+
 import RPi.GPIO as gpio
 import time
 def trigger_motor():
@@ -7,13 +8,13 @@ def trigger_motor():
     print("one")
     gpio.output(5,False)
     gpio.output(6,True)
-    time.sleep(5)
+    time.sleep(4.5)
     print("two")
     gpio.output(6, False)
     time.sleep(3)
     gpio.output(5,True)
     gpio.output(6,False)
-    time.sleep(5)
+    time.sleep(4)
     print("stop")
     gpio.output(5,False)
     gpio.output(6,False)

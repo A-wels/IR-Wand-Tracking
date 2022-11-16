@@ -71,7 +71,7 @@ while True:
         continue
 
     # blur the image and locate max
-    gray = cv2.GaussianBlur(gray, (3, 3), 0)
+#    gray = cv2.GaussianBlur(gray, (3, 3), 0)
     (_, maxVal, _, maxLoc) = cv2.minMaxLoc(gray)
     #print("maxval: " + str(maxVal))
     # check if the wand was held still
