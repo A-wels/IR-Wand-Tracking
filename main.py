@@ -4,9 +4,8 @@ import cv2
 import numpy as np
 import time
 from config import *
-from modules.actions import toggle_hexalight
+from modules.actions import toggle_hexalight, trigger_motor
 from util import recognize_gesture, show_trace, show_tracepoints
-from modules.motor import trigger_motor
 
 
 cam = cv2.VideoCapture(0)
