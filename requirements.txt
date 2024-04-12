@@ -1,6 +1,6 @@
 certifi==2022.9.24
 charset-normalizer==2.1.1
-idna==3.4
+idna==3.7
 mypy==0.982
 mypy-extensions==0.4.3
 numpy==1.22.3
